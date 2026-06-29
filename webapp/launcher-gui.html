@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UPFEEDTH Server Launcher</title>
+  <title>UPFEEDTH Launcher | V.0.1.11</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -16,6 +17,7 @@
       --danger-hover: #dc2626;
       --success: #10b981;
     }
+
     body {
       margin: 0;
       padding: 0;
@@ -27,6 +29,7 @@
       flex-direction: column;
       overflow: hidden;
     }
+
     .container {
       display: flex;
       flex-direction: column;
@@ -34,6 +37,7 @@
       padding: 20px;
       box-sizing: border-box;
     }
+
     .header {
       display: flex;
       justify-content: space-between;
@@ -46,10 +50,12 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
+
     .title-group {
       display: flex;
       flex-direction: column;
     }
+
     h1 {
       margin: 0;
       font-size: 24px;
@@ -58,6 +64,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
+
     .status {
       display: flex;
       align-items: center;
@@ -65,6 +72,7 @@
       font-size: 14px;
       color: var(--text-muted);
     }
+
     .status-dot {
       width: 8px;
       height: 8px;
@@ -73,10 +81,12 @@
       margin-right: 8px;
       box-shadow: 0 0 8px var(--success);
     }
+
     .actions {
       display: flex;
       gap: 12px;
     }
+
     button {
       padding: 10px 20px;
       border: none;
@@ -87,23 +97,28 @@
       transition: all 0.2s ease;
       color: white;
     }
+
     .btn-primary {
       background-color: var(--primary);
       box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
     }
+
     .btn-primary:hover {
       background-color: var(--primary-hover);
       transform: translateY(-1px);
     }
+
     .btn-danger {
       background-color: rgba(239, 68, 68, 0.2);
       color: var(--danger);
       border: 1px solid rgba(239, 68, 68, 0.5);
     }
+
     .btn-danger:hover {
       background-color: var(--danger);
       color: white;
     }
+
     .terminal {
       flex: 1;
       background: #000;
@@ -117,33 +132,41 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);
     }
+
     .log-line {
       margin: 0;
       word-wrap: break-word;
     }
+
     .log-error {
       color: #bf616a;
     }
+
     .log-info {
       color: #88c0d0;
     }
+
     /* Scrollbar styling */
     ::-webkit-scrollbar {
       width: 8px;
     }
+
     ::-webkit-scrollbar-track {
       background: #000;
       border-radius: 8px;
     }
+
     ::-webkit-scrollbar-thumb {
       background: #4c566a;
       border-radius: 8px;
     }
+
     ::-webkit-scrollbar-thumb:hover {
       background: #434c5e;
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
@@ -151,16 +174,16 @@
         <h1>UPFEEDTH</h1>
         <div class="status">
           <div class="status-dot"></div>
-          <span id="status-text">Server Running on Localhost</span>
+          <span id="status-text">UPFEED FOR YOUR LIFE!</span>
         </div>
       </div>
       <div class="actions">
-        <button class="btn-primary" id="btn-open">Open in Browser</button>
-        <button class="btn-danger" id="btn-stop">Stop Server</button>
+        <button class="btn-primary" id="btn-open">เปิดระบบหน้าเว็บ</button>
+        <button class="btn-danger" id="btn-stop">ปิดระบบ</button>
       </div>
     </div>
     <div class="terminal" id="terminal">
-      <div class="log-info">Initializing UPFEEDTH local server...</div>
+      <div class="log-info">กำลังตรวจสอบระบบ UPFEEDTH...</div>
     </div>
   </div>
 
@@ -175,7 +198,7 @@
     function addLog(msg) {
       const line = document.createElement('div');
       line.className = 'log-line';
-      
+
       if (msg.includes('ERROR:')) {
         line.classList.add('log-error');
       } else if (msg.includes('SYSTEM:')) {
@@ -187,7 +210,7 @@
       } else if (msg.includes('ready') || msg.includes('started')) {
         line.classList.add('log-info');
       }
-      
+
       line.textContent = msg;
       terminal.appendChild(line);
       terminal.scrollTop = terminal.scrollHeight;
@@ -214,4 +237,5 @@
     });
   </script>
 </body>
+
 </html>
