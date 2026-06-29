@@ -30,18 +30,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Prepare FormData for Facebook Graph API
-    const fbFormData = new FormData();
-    fbFormData.append('source', file);
-    fbFormData.append('access_token', accessToken);
-    if (swipeUpLink) {
-      fbFormData.append('swipe_up_link', swipeUpLink);
+    // Step 1: Upload photo as unpublished to the page
+    const uploadFormData = new FormData();
+    uploadFormData.append('source', file);
+    uploadFormData.append('published', 'false');
+    uploadFormData.append('access_token', accessToken);
+
+    const uploadRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}/photos`, {
+      method: 'POST',
+      body: uploadFormData
+    });
+
+    const uploadData = await uploadRes.json();
+
+    if (!uploadRes.ok || !uploadData.id) {
+      console.error('Facebook Photo Upload Error:', uploadData);
+      return NextResponse.json({ 
+        success: false, 
+        error: uploadData.error?.message || 'Failed to upload photo to Facebook' 
+      }, { status: 400 });
     }
 
-    // Call Facebook Graph API
+    const photoId = uploadData.id;
+
+    // Step 2: Publish the story using the photo_id
+    const storyFormData = new FormData();
+    storyFormData.append('photo_id', photoId);
+    storyFormData.append('access_token', accessToken);
+    if (swipeUpLink) {
+      storyFormData.append('swipe_up_link', swipeUpLink);
+    }
+
     const fbRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}/photo_stories`, {
       method: 'POST',
-      body: fbFormData
+      body: storyFormData
     });
 
     const fbData = await fbRes.json();
