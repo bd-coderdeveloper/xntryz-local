@@ -128,7 +128,7 @@ export default function PageStoryPage() {
           call_to_action_data: {
             is_cta_share_post: true,
             link: swipeUpLink,
-            page: "1033857656483515",
+            page: effectivePageId,
             type: "SEE_MORE"
           },
           attachments: [{ photo: { id: uploadedPhotoId.toString(), overlays: [] } }],
