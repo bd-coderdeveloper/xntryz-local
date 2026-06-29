@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import FacebookPageSelector from '@/components/FacebookPageSelector';
 import { Loader2, Play, Copy, CheckCheck, Upload, Smartphone, Link as LinkIcon, Trash2 } from 'lucide-react';
 import { supabase } from '@/utils/supabase/client';
+import { SendRequestToExtension } from '@/utils/extensionBridge';
 
 export default function PageStoryPage() {
   const [loading, setLoading] = useState(false);
@@ -57,33 +58,91 @@ export default function PageStoryPage() {
     addLog(`กำลังเตรียมไฟล์และอัปโหลดไปที่เพจ: ${targetPage.name}...`);
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedImage);
-      formData.append('pageId', effectivePageId);
-      formData.append('accessToken', targetPage.access_token);
-      formData.append('swipeUpLink', swipeUpLink);
-
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        addLog('Error: กรุณาล็อกอินเข้าระบบก่อน');
+        setLoading(false);
+        return;
+      }
 
-      addLog(`[SYSTEM] กำลังส่งคำสั่งโพสต์ไปยังเซิร์ฟเวอร์...`);
-      const res = await fetch('/api/facebook/story', {
+      addLog(`[SYSTEM] กำลังอัปโหลดรูปภาพชั่วคราว...`);
+      
+      // 1. Upload to Supabase
+      const fileExt = selectedImage.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `${session.user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(filePath, selectedImage);
+
+      if (uploadError) {
+        throw new Error(`อัปโหลดรูปไม่สำเร็จ: ${uploadError.message}`);
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(filePath);
+
+      addLog(`[SYSTEM] อัปโหลดรูปสำเร็จ! กำลังสั่งการผ่าน Extension...`);
+
+      // 2. Call Graph API via PROXY_FETCH to upload unpublished photo from URL
+      const uploadRes = await SendRequestToExtension('PROXY_FETCH', {
+        url: `https://graph.facebook.com/v21.0/${effectivePageId}/photos`,
         method: 'POST',
+        body: JSON.stringify({
+          access_token: targetPage.access_token,
+          published: false,
+          url: publicUrl
+        }),
         headers: {
-          'Authorization': `Bearer ${session?.access_token}`
-        },
-        body: formData
-      });
+          'Content-Type': 'application/json'
+        }
+      }) as any;
 
-      const data = await res.json();
+      const photoData = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data;
 
-      if (res.ok && data.success) {
-        addLog(`[OK] โพสต์สตอรี่สำเร็จ! ID: ${data.data.id || data.data.post_id}`);
+      if (photoData.error) {
+        throw new Error(`Facebook API (Photos): ${photoData.error.message}`);
+      }
+
+      if (!photoData.id) {
+        throw new Error(`ไม่สามารถอัปโหลดรูปภาพไปยังเพจได้`);
+      }
+
+      addLog(`[SYSTEM] โอนย้ายรูปภาพไปยังเพจสำเร็จ (Photo ID: ${photoData.id})`);
+      addLog(`[SYSTEM] กำลังเผยแพร่ลง Story...`);
+
+      // 3. Call Graph API via PROXY_FETCH to publish the story
+      const storyRes = await SendRequestToExtension('PROXY_FETCH', {
+        url: `https://graph.facebook.com/v21.0/${effectivePageId}/photo_stories`,
+        method: 'POST',
+        body: JSON.stringify({
+          access_token: targetPage.access_token,
+          photo_id: photoData.id,
+          swipe_up_link: swipeUpLink
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }) as any;
+
+      const storyData = typeof storyRes.data === 'string' ? JSON.parse(storyRes.data) : storyRes.data;
+
+      if (storyData.error) {
+        throw new Error(`Facebook API (Story): ${storyData.error.message}`);
+      }
+
+      if (storyData.id) {
+        addLog(`[OK] โพสต์สตอรี่สำเร็จ! ID: ${storyData.id}`);
+        // Cleanup storage to save space
+        supabase.storage.from('uploads').remove([filePath]).catch(() => {});
         
         // Reset form on success
         setSwipeUpLink('');
         removeImage();
       } else {
-        addLog(`[FAIL] เกิดข้อผิดพลาด: ${data.error || 'Unknown error'}`);
+        addLog(`[FAIL] เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ`);
       }
     } catch (e: any) {
       addLog(`[ERROR] ${e.message || 'Unknown error occurred'}`);
