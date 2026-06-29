@@ -3,7 +3,7 @@
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Zap, CreditCard, Trash2, CopyPlus, LogOut, DownloadCloud, X, ShieldCheck, User, Ticket, Activity, HelpCircle, Megaphone, MessageSquare, Facebook, ChevronRight, Users, Send, FilePlus, Video, Settings, ShieldAlert, Menu } from 'lucide-react';
+import { LayoutDashboard, Zap, CreditCard, Trash2, CopyPlus, LogOut, DownloadCloud, X, ShieldCheck, User, Ticket, Activity, HelpCircle, Megaphone, MessageSquare, Facebook, ChevronRight, Users, Send, FilePlus, Video, Settings, ShieldAlert, Menu, Smartphone } from 'lucide-react';
 import AnnouncementSystem from '@/components/AnnouncementSystem';
 import { supabase } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -236,6 +236,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     { name: 'Auto Create Pages', icon: FilePlus, path: '/tools/auto-create-page' },
     { name: 'Page Posts Remover', icon: Trash2, path: '/tools/post-remover' },
     { name: 'Page Deep Clone', icon: CopyPlus, path: '/tools/deep-clone' },
+    { name: 'Page Story & Link', icon: Smartphone, path: '/tools/page-story' },
   ];
 
   const groupNavLinks = [
