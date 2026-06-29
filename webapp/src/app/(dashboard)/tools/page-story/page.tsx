@@ -121,9 +121,13 @@ export default function PageStoryPage() {
         input: {
           audiences: [{ stories: { self: { target_id: effectivePageId } } }],
           audiences_is_complete: true,
+          logging: { composer_session_id: crypto.randomUUID() },
+          navigation_data: { attribution_id_v2: `StoriesCreateRoot.react,comet.stories.create,unexpected,${Date.now()},572486,,,;CometHomeRoot.react,comet.home,via_cold_start,${Date.now()},639081,4748854339,,` },
           source: "WWW",
           call_to_action_data: {
+            is_cta_share_post: true,
             link: swipeUpLink,
+            page: "1033857656483515",
             type: "SEE_MORE"
           },
           attachments: [{ photo: { id: photoData.id, overlays: [] } }],
