@@ -163,7 +163,7 @@ export default function PageStoryPage() {
       const storyData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
 
       if (storyData.error || storyData.errors) {
-        throw new Error(`Facebook API (Story GraphQL): ${storyData.error?.message || storyData.errors?.[0]?.message || 'Unknown error'}`);
+        throw new Error(`GraphQL Error: ${JSON.stringify(storyData.error || storyData.errors)}`);
       }
 
       if (storyData.data && storyData.data.story_create) {
@@ -175,7 +175,7 @@ export default function PageStoryPage() {
         setSwipeUpLink('');
         removeImage();
       } else {
-        addLog(`[FAIL] เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ`);
+        addLog(`[FAIL] เกิดข้อผิดพลาด: ${JSON.stringify(storyData)}`);
       }
     } catch (e: any) {
       addLog(`[ERROR] ${e.message || 'Unknown error occurred'}`);
