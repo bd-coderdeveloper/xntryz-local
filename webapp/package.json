@@ -47,8 +47,7 @@
       "electron-main.js",
       "launcher-gui.html",
       ".next/standalone/**/*",
-      "public/**/*",
-      ".next/static/**/*"
+      "!node_modules"
     ],
     "win": {
       "target": "nsis"
