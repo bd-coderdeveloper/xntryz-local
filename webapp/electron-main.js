@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const path = require("path");
 const { spawn } = require("child_process");
 const http = require("http");
@@ -74,6 +75,33 @@ function startNextJsServer() {
 app.on("ready", () => {
   createWindow();
   startNextJsServer();
+
+  // Auto Updater logic
+  autoUpdater.checkForUpdatesAndNotify();
+
+  autoUpdater.on("checking-for-update", () => {
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: Checking for updates...");
+  });
+  autoUpdater.on("update-available", (info) => {
+    if (mainWindow) mainWindow.webContents.send("server-log", `SYSTEM: Update available! Version ${info.version}`);
+  });
+  autoUpdater.on("update-not-available", (info) => {
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: You are on the latest version.");
+  });
+  autoUpdater.on("error", (err) => {
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM ERROR: Error in auto-updater. " + err);
+  });
+  autoUpdater.on("download-progress", (progressObj) => {
+    let log_message = `SYSTEM: Download speed: ${Math.round(progressObj.bytesPerSecond / 1024)} KB/s`;
+    log_message += ` - Downloaded ${Math.round(progressObj.percent)}%`;
+    if (mainWindow) mainWindow.webContents.send("server-log", log_message);
+  });
+  autoUpdater.on("update-downloaded", (info) => {
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: Update downloaded! The app will restart shortly to install.");
+    setTimeout(() => {
+      autoUpdater.quitAndInstall();
+    }, 3000);
+  });
 });
 
 app.on("window-all-closed", function () {

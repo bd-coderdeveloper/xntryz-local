@@ -178,6 +178,12 @@
       
       if (msg.includes('ERROR:')) {
         line.classList.add('log-error');
+      } else if (msg.includes('SYSTEM:')) {
+        line.style.color = '#ebcb8b'; // Yellow for system
+        line.style.fontWeight = 'bold';
+      } else if (msg.includes('SYSTEM ERROR:')) {
+        line.classList.add('log-error');
+        line.style.fontWeight = 'bold';
       } else if (msg.includes('ready') || msg.includes('started')) {
         line.classList.add('log-info');
       }
