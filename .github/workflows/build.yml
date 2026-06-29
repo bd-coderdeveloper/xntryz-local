@@ -30,6 +30,10 @@ jobs:
         working-directory: ./webapp
         run: |
           echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.local
+          echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" >> .env.local
+          echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env.local
+          echo "THSMS_API_KEY=${{ secrets.THSMS_API_KEY }}" >> .env.local
+          echo "SLIPOK_API_KEY=${{ secrets.SLIPOK_API_KEY }}" >> .env.local
 
       - name: Build Next.js
         working-directory: ./webapp
