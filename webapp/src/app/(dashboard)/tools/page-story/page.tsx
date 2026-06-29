@@ -115,8 +115,10 @@ export default function PageStoryPage() {
       addLog(`[SYSTEM] กำลังเตรียมข้อมูล GraphQL เพื่อเผยแพร่ลง Story...`);
 
       // Get fb_dtsg for GraphQL mutation
-      const { fb_dtsg } = await fetchWebDTSGData();
+      const { fb_dtsg, actor_id } = await fetchWebDTSGData();
 
+      // No need to check session because we will use business.facebook.com which allows cross-context posting!
+      
       const variables = JSON.stringify({
         input: {
           audiences: [{ stories: { self: { target_id: effectivePageId } } }],
@@ -137,9 +139,10 @@ export default function PageStoryPage() {
         }
       });
 
-      // 3. Call GraphQL via PROXY_UPLOAD (This avoids body stringification issues in the extension)
+      // 3. Call GraphQL via PROXY_UPLOAD
+      // We use business.facebook.com to bypass the profile/page session mismatch!
       const storyRes = await SendRequestToExtension('PROXY_UPLOAD', {
-        url: 'https://www.facebook.com/api/graphql/',
+        url: 'https://business.facebook.com/api/graphql/',
         headers: {
           'Accept': '*/*'
         },
