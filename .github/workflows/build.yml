@@ -34,6 +34,7 @@ jobs:
           echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env.local
           echo "THSMS_API_KEY=${{ secrets.THSMS_API_KEY }}" >> .env.local
           echo "SLIPOK_API_KEY=${{ secrets.SLIPOK_API_KEY }}" >> .env.local
+          echo "NEXT_PUBLIC_ADMIN_USERNAMES=${{ secrets.NEXT_PUBLIC_ADMIN_USERNAMES }}" >> .env.local
 
       - name: Build Next.js
         working-directory: ./webapp
