@@ -26,6 +26,8 @@ jobs:
 
       - name: Build Next.js
         working-directory: ./webapp
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: dummy_key_to_pass_build
         run: npm run build:standalone
 
       - name: Build Electron (.exe)
