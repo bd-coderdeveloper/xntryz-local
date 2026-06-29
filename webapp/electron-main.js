@@ -36,7 +36,9 @@ function startNextJsServer() {
   
   // In dev mode, we might just be testing the GUI. 
   // We'll try to run the standalone server if it exists.
-  const serverPath = path.join(__dirname, ".next", "standalone", "server.js");
+  const serverPath = isDev 
+    ? path.join(__dirname, ".next", "standalone", "server.js")
+    : path.join(process.resourcesPath, "standalone_app", "server.js");
   
   // Set env vars
   const env = {
