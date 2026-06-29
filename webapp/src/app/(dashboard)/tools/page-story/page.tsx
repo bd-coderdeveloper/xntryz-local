@@ -123,9 +123,7 @@ export default function PageStoryPage() {
           audiences_is_complete: true,
           source: "WWW",
           call_to_action_data: {
-            is_cta_share_post: true,
             link: swipeUpLink,
-            page: effectivePageId,
             type: "SEE_MORE"
           },
           attachments: [{ photo: { id: photoData.id, overlays: [] } }],
@@ -142,6 +140,7 @@ export default function PageStoryPage() {
         fb_dtsg: fb_dtsg,
         fb_api_caller_class: "RelayModern",
         fb_api_req_friendly_name: "StoriesCreateMutation",
+        server_timestamps: "true",
         variables: variables,
         doc_id: "26770527039211553"
       }).toString();
