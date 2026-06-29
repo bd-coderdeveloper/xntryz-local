@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     // Step 1: Upload photo as unpublished to the page
     const uploadFormData = new FormData();
-    uploadFormData.append('source', file);
+    uploadFormData.append('source', file, file.name || 'image.jpg');
     uploadFormData.append('published', 'false');
     uploadFormData.append('access_token', accessToken);
 
