@@ -1,6 +1,6 @@
 {
   "name": "webapp",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "private": true,
   "main": "electron-main.js",
   "scripts": {
@@ -50,7 +50,8 @@
       {
         "provider": "github",
         "owner": "bd-coderdeveloper",
-        "repo": "xntryz-local"
+        "repo": "xntryz-local",
+        "releaseType": "release"
       }
     ],
     "files": [
