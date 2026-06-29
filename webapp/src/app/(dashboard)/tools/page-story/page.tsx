@@ -137,26 +137,21 @@ export default function PageStoryPage() {
         }
       });
 
-      const gqlBody = new URLSearchParams({
-        av: effectivePageId,
-        __user: effectivePageId,
-        __a: "1",
-        fb_dtsg: fb_dtsg,
-        fb_api_caller_class: "RelayModern",
-        fb_api_req_friendly_name: "StoriesCreateMutation",
-        server_timestamps: "true",
-        variables: variables,
-        doc_id: "26770527039211553"
-      }).toString();
-
-      // 3. Call GraphQL via PROXY_FETCH to publish the story
-      const storyRes = await SendRequestToExtension('PROXY_FETCH', {
-        url: `https://www.facebook.com/api/graphql/`,
-        method: 'POST',
-        body: gqlBody,
+      // 3. Call GraphQL via PROXY_UPLOAD (This avoids body stringification issues in the extension)
+      const storyRes = await SendRequestToExtension('PROXY_UPLOAD', {
+        url: 'https://www.facebook.com/api/graphql/',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+          'Accept': '*/*'
+        },
+        formDataEntries: [
+          { type: 'text', name: 'av', value: effectivePageId },
+          { type: 'text', name: '__user', value: effectivePageId },
+          { type: 'text', name: '__a', value: "1" },
+          { type: 'text', name: 'fb_dtsg', value: fb_dtsg },
+          { type: 'text', name: 'server_timestamps', value: "true" },
+          { type: 'text', name: 'doc_id', value: '26770527039211553' },
+          { type: 'text', name: 'variables', value: variables }
+        ]
       }) as any;
 
       let rawData = storyRes.data;
