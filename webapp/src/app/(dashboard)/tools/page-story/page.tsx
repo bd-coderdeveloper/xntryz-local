@@ -156,7 +156,11 @@ export default function PageStoryPage() {
         }
       }) as any;
 
-      const storyData = typeof storyRes.data === 'string' ? JSON.parse(storyRes.data) : storyRes.data;
+      let rawData = storyRes.data;
+      if (typeof rawData === 'string' && rawData.indexOf('for (;;);') === 0) {
+        rawData = rawData.replace('for (;;);', '');
+      }
+      const storyData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
 
       if (storyData.error || storyData.errors) {
         throw new Error(`Facebook API (Story GraphQL): ${storyData.error?.message || storyData.errors?.[0]?.message || 'Unknown error'}`);
