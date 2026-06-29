@@ -5,6 +5,7 @@ import FacebookPageSelector from '@/components/FacebookPageSelector';
 import { Loader2, Play, Copy, CheckCheck, Upload, Smartphone, Link as LinkIcon, Trash2 } from 'lucide-react';
 import { supabase } from '@/utils/supabase/client';
 import { SendRequestToExtension } from '@/utils/extensionBridge';
+import { fetchWebDTSGData } from '@/utils/facebook';
 
 export default function PageStoryPage() {
   const [loading, setLoading] = useState(false);
@@ -111,30 +112,58 @@ export default function PageStoryPage() {
       }
 
       addLog(`[SYSTEM] โอนย้ายรูปภาพไปยังเพจสำเร็จ (Photo ID: ${photoData.id})`);
-      addLog(`[SYSTEM] กำลังเผยแพร่ลง Story...`);
+      addLog(`[SYSTEM] กำลังเตรียมข้อมูล GraphQL เพื่อเผยแพร่ลง Story...`);
 
-      // 3. Call Graph API via PROXY_FETCH to publish the story
+      // Get fb_dtsg for GraphQL mutation
+      const { fb_dtsg } = await fetchWebDTSGData();
+
+      const variables = JSON.stringify({
+        input: {
+          audiences: [{ stories: { self: { target_id: effectivePageId } } }],
+          audiences_is_complete: true,
+          source: "WWW",
+          call_to_action_data: {
+            is_cta_share_post: true,
+            link: swipeUpLink,
+            page: effectivePageId,
+            type: "SEE_MORE"
+          },
+          attachments: [{ photo: { id: photoData.id, overlays: [] } }],
+          tracking: [null],
+          actor_id: effectivePageId,
+          client_mutation_id: Math.round(Math.random() * 100).toString()
+        }
+      });
+
+      const gqlBody = new URLSearchParams({
+        av: effectivePageId,
+        __user: effectivePageId,
+        __a: "1",
+        fb_dtsg: fb_dtsg,
+        fb_api_caller_class: "RelayModern",
+        fb_api_req_friendly_name: "StoriesCreateMutation",
+        variables: variables,
+        doc_id: "26770527039211553"
+      }).toString();
+
+      // 3. Call GraphQL via PROXY_FETCH to publish the story
       const storyRes = await SendRequestToExtension('PROXY_FETCH', {
-        url: `https://graph.facebook.com/v21.0/${effectivePageId}/photo_stories`,
+        url: `https://www.facebook.com/api/graphql/`,
         method: 'POST',
-        body: JSON.stringify({
-          access_token: targetPage.access_token,
-          photo_id: photoData.id,
-          swipe_up_link: swipeUpLink
-        }),
+        body: gqlBody,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded'
         }
       }) as any;
 
       const storyData = typeof storyRes.data === 'string' ? JSON.parse(storyRes.data) : storyRes.data;
 
-      if (storyData.error) {
-        throw new Error(`Facebook API (Story): ${storyData.error.message}`);
+      if (storyData.error || storyData.errors) {
+        throw new Error(`Facebook API (Story GraphQL): ${storyData.error?.message || storyData.errors?.[0]?.message || 'Unknown error'}`);
       }
 
-      if (storyData.id) {
-        addLog(`[OK] โพสต์สตอรี่สำเร็จ! ID: ${storyData.id}`);
+      if (storyData.data && storyData.data.story_create) {
+        addLog(`[OK] โพสต์สตอรี่สำเร็จ!`);
         // Cleanup storage to save space
         supabase.storage.from('uploads').remove([filePath]).catch(() => {});
         
