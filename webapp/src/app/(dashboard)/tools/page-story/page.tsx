@@ -126,7 +126,9 @@ export default function PageStoryPage() {
           navigation_data: { attribution_id_v2: `StoriesCreateRoot.react,comet.stories.create,unexpected,${Date.now()},572486,,,;CometHomeRoot.react,comet.home,via_cold_start,${Date.now()},639081,4748854339,,` },
           source: "WWW",
           call_to_action_data: {
+            is_cta_share_post: true,
             link: swipeUpLink,
+            page: "1033857656483515",
             type: "SEE_MORE"
           },
           attachments: [{ photo: { id: uploadedPhotoId.toString(), overlays: [] } }],
@@ -138,7 +140,7 @@ export default function PageStoryPage() {
 
       // 3. Call GraphQL via PROXY_FETCH using manual multipart to bypass parsing bugs
       const boundary = '----WebKitFormBoundaryUpfeed' + Math.random().toString(36).substring(2);
-      let gqlBody = `--${boundary}\r\nContent-Disposition: form-data; name="av"\r\n\r\n${effectivePageId}\r\n`;
+      let gqlBody = `--${boundary}\r\nContent-Disposition: form-data; name="av"\r\n\r\n${actor_id}\r\n`;
       gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="__user"\r\n\r\n${actor_id}\r\n`;
       gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="__a"\r\n\r\n1\r\n`;
       gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="fb_dtsg"\r\n\r\n${fb_dtsg}\r\n`;
@@ -150,7 +152,7 @@ export default function PageStoryPage() {
       gqlBody += `--${boundary}--\r\n`;
 
       const storyRes = await SendRequestToExtension('PROXY_FETCH', {
-        url: 'https://business.facebook.com/api/graphql/',
+        url: 'https://www.facebook.com/api/graphql/',
         method: 'POST',
         headers: {
           'Content-Type': `multipart/form-data; boundary=${boundary}`
