@@ -66,59 +66,58 @@ export default function PageStoryPage() {
         return;
       }
 
-      addLog(`[SYSTEM] กำลังอัปโหลดรูปภาพชั่วคราว...`);
+      addLog(`[SYSTEM] กำลังส่งรูปภาพผ่าน Extension (upload.facebook.com)...`);
       
-      // 1. Upload to Supabase
-      const fileExt = selectedImage.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${session.user.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('uploads')
-        .upload(filePath, selectedImage);
-
-      if (uploadError) {
-        throw new Error(`อัปโหลดรูปไม่สำเร็จ: ${uploadError.message}`);
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('uploads')
-        .getPublicUrl(filePath);
-
-      addLog(`[SYSTEM] อัปโหลดรูปสำเร็จ! กำลังสั่งการผ่าน Extension...`);
-
-      // 2. Call Graph API via PROXY_FETCH to upload unpublished photo from URL
-      const uploadRes = await SendRequestToExtension('PROXY_FETCH', {
-        url: `https://graph.facebook.com/v21.0/${effectivePageId}/photos`,
-        method: 'POST',
-        body: JSON.stringify({
-          access_token: targetPage.access_token,
-          published: false,
-          url: publicUrl
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }) as any;
-
-      const photoData = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data;
-
-      if (photoData.error) {
-        throw new Error(`Facebook API (Photos): ${photoData.error.message}`);
-      }
-
-      if (!photoData.id) {
-        throw new Error(`ไม่สามารถอัปโหลดรูปภาพไปยังเพจได้`);
-      }
-
-      addLog(`[SYSTEM] โอนย้ายรูปภาพไปยังเพจสำเร็จ (Photo ID: ${photoData.id})`);
-      addLog(`[SYSTEM] กำลังเตรียมข้อมูล GraphQL เพื่อเผยแพร่ลง Story...`);
-
       // Get fb_dtsg for GraphQL mutation
       const { fb_dtsg, actor_id } = await fetchWebDTSGData();
 
-      // No need to check session because we will use business.facebook.com which allows cross-context posting!
-      
+      // 1. Upload photo directly to upload.facebook.com
+      const buffer = await selectedImage.arrayBuffer();
+      const byteNumbers = Array.from(new Uint8Array(buffer));
+      let val = 0;
+      for (let i = 0; i < fb_dtsg.length; i++) val += fb_dtsg.charCodeAt(i);
+      const jazoest = '2' + val.toString();
+
+      const photoUrl = `https://upload.facebook.com/ajax/react_composer/attachments/photo/upload?av=${actor_id}&__user=${actor_id}&__a=1`;
+
+      const uploadRes: any = await SendRequestToExtension('PROXY_UPLOAD', {
+        url: photoUrl,
+        headers: { 'Accept': '*/*' },
+        formDataEntries: [
+          { type: 'text', name: 'profile_id', value: actor_id },
+          { type: 'text', name: 'fb_dtsg', value: fb_dtsg },
+          { type: 'text', name: 'jazoest', value: jazoest },
+          { type: 'text', name: 'source', value: '8' },
+          {
+            type: 'file',
+            name: 'farr',
+            data: byteNumbers,
+            mimeType: selectedImage.type || 'image/jpeg',
+            fileName: selectedImage.name || 'upload.jpg'
+          }
+        ]
+      });
+
+      if (uploadRes.error) throw new Error(`Facebook API (Upload): ${uploadRes.error}`);
+
+      let cleanData = uploadRes.data;
+      if (typeof cleanData === 'string') {
+        cleanData = cleanData.replace('for (;;);', '').trim();
+      }
+      const photoData = typeof cleanData === 'string' ? JSON.parse(cleanData) : cleanData;
+
+      if (photoData.error) {
+        throw new Error(`Facebook API (Photos): ${photoData.error.errorSummary || JSON.stringify(photoData.error)}`);
+      }
+
+      const uploadedPhotoId = photoData.payload?.photoID || photoData.payload?.fbid;
+      if (!uploadedPhotoId) {
+        throw new Error(`ไม่สามารถอัปโหลดรูปภาพไปยังเพจได้: ${JSON.stringify(photoData)}`);
+      }
+
+      addLog(`[SYSTEM] โอนย้ายรูปภาพไปยังเพจสำเร็จ (Photo ID: ${uploadedPhotoId})`);
+      addLog(`[SYSTEM] กำลังเตรียมข้อมูล GraphQL เพื่อเผยแพร่ลง Story...`);
+
       const variables = JSON.stringify({
         input: {
           audiences: [{ stories: { self: { target_id: effectivePageId } } }],
@@ -132,31 +131,34 @@ export default function PageStoryPage() {
             page: "1033857656483515",
             type: "SEE_MORE"
           },
-          attachments: [{ photo: { id: photoData.id, overlays: [] } }],
+          attachments: [{ photo: { id: uploadedPhotoId.toString(), overlays: [] } }],
           tracking: [null],
           actor_id: effectivePageId,
           client_mutation_id: Math.round(Math.random() * 100).toString()
         }
       });
 
-      // 3. Call GraphQL via PROXY_UPLOAD
-      // We use business.facebook.com to bypass the profile/page session mismatch!
-      const storyRes = await SendRequestToExtension('PROXY_UPLOAD', {
+      // 3. Call GraphQL via PROXY_FETCH using manual multipart to bypass parsing bugs
+      const boundary = '----WebKitFormBoundaryUpfeed' + Math.random().toString(36).substring(2);
+      let gqlBody = `--${boundary}\r\nContent-Disposition: form-data; name="av"\r\n\r\n${effectivePageId}\r\n`;
+      gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="__user"\r\n\r\n${actor_id}\r\n`;
+      gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="__a"\r\n\r\n1\r\n`;
+      gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="fb_dtsg"\r\n\r\n${fb_dtsg}\r\n`;
+      gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="fb_api_caller_class"\r\n\r\nRelayModern\r\n`;
+      gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="fb_api_req_friendly_name"\r\n\r\nStoriesCreateMutation\r\n`;
+      gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="server_timestamps"\r\n\r\ntrue\r\n`;
+      gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="doc_id"\r\n\r\n26770527039211553\r\n`;
+      gqlBody += `--${boundary}\r\nContent-Disposition: form-data; name="variables"\r\n\r\n${variables}\r\n`;
+      gqlBody += `--${boundary}--\r\n`;
+
+      const storyRes = await SendRequestToExtension('PROXY_FETCH', {
         url: 'https://business.facebook.com/api/graphql/',
+        method: 'POST',
         headers: {
-          'Accept': '*/*'
+          'Content-Type': `multipart/form-data; boundary=${boundary}`
         },
-        formDataEntries: [
-          { type: 'text', name: 'av', value: effectivePageId },
-          { type: 'text', name: '__user', value: effectivePageId },
-          { type: 'text', name: '__a', value: "1" },
-          { type: 'text', name: 'fb_dtsg', value: fb_dtsg },
-          { type: 'text', name: 'fb_api_caller_class', value: "RelayModern" },
-          { type: 'text', name: 'fb_api_req_friendly_name', value: "StoriesCreateMutation" },
-          { type: 'text', name: 'server_timestamps', value: "true" },
-          { type: 'text', name: 'doc_id', value: '26770527039211553' },
-          { type: 'text', name: 'variables', value: variables }
-        ]
+        bodyType: 'string',
+        body: gqlBody
       }) as any;
 
       let rawData = storyRes.data;
@@ -171,8 +173,6 @@ export default function PageStoryPage() {
 
       if (storyData.data && storyData.data.story_create) {
         addLog(`[OK] โพสต์สตอรี่สำเร็จ!`);
-        // Cleanup storage to save space
-        supabase.storage.from('uploads').remove([filePath]).catch(() => {});
         
         // Reset form on success
         setSwipeUpLink('');
