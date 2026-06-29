@@ -34,13 +34,13 @@ function createWindow() {
 
 function startNextJsServer() {
   const isDev = !app.isPackaged;
-  
+
   // In dev mode, we might just be testing the GUI. 
   // We'll try to run the standalone server if it exists.
-  const serverPath = isDev 
+  const serverPath = isDev
     ? path.join(__dirname, ".next", "standalone", "server.js")
     : path.join(process.resourcesPath, "standalone_app", "server.js");
-  
+
   // Set env vars
   const env = {
     ...process.env,
@@ -68,9 +68,9 @@ function startNextJsServer() {
   });
 
   serverProcess.on("close", (code) => {
-    console.log(`Next.js server exited with code ${code}`);
+    console.log(`Next.js เกิดข้อผิดพลาด : ${code}`);
     if (mainWindow) {
-      mainWindow.webContents.send("server-log", `Server exited with code ${code}`);
+      mainWindow.webContents.send("server-log", `SYSTEM: ระบบเกิดข้อผิดพลาด : ${code}`);
     }
   });
 }
@@ -83,27 +83,27 @@ app.on("ready", () => {
   autoUpdater.checkForUpdatesAndNotify();
 
   autoUpdater.on("checking-for-update", () => {
-    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: Checking for updates...");
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: กำลังตรวจสอบการอัปเดต...");
   });
   autoUpdater.on("update-available", (info) => {
-    if (mainWindow) mainWindow.webContents.send("server-log", `SYSTEM: Update available! Version ${info.version}`);
+    if (mainWindow) mainWindow.webContents.send("server-log", `SYSTEM: มีการอัปเดตเวอร์ชันใหม่: ${info.version}`);
   });
   autoUpdater.on("update-not-available", (info) => {
-    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: You are on the latest version.");
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: คุณได้ใช้ UPFEEDTH เวอร์ชันล่าสุดแล้ว");
   });
   autoUpdater.on("error", (err) => {
-    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM ERROR: Error in auto-updater. " + err);
+    if (mainWindow) mainWindow.webContents.send("server-log", "ERROR: เกิดข้อผิดพลาดในการอัปเดตอัตโนมัติ " + err);
   });
   autoUpdater.on("download-progress", (progressObj) => {
-    let log_message = `SYSTEM: Download speed: ${Math.round(progressObj.bytesPerSecond / 1024)} KB/s`;
-    log_message += ` - Downloaded ${Math.round(progressObj.percent)}%`;
+    let log_message = `SYSTEM: ความเร็วในการดาวน์โหลด: ${Math.round(progressObj.bytesPerSecond / 1024)} KB/s`;
+    log_message += ` - ดาวน์โหลดแล้ว ${Math.round(progressObj.percent)}%`;
     if (mainWindow) mainWindow.webContents.send("server-log", log_message);
   });
   autoUpdater.on("update-downloaded", (info) => {
-    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: Update downloaded! The app will restart shortly to install.");
+    if (mainWindow) mainWindow.webContents.send("server-log", "SYSTEM: ดาวน์โหลดเสร็จสิ้น! กำลังเริ่มการทำงานใหม่...");
     setTimeout(() => {
       autoUpdater.quitAndInstall();
-    }, 3000);
+    }, 1000);
   });
 });
 
@@ -125,7 +125,7 @@ ipcMain.on("stop-server", () => {
     serverProcess.kill();
     serverProcess = null;
     if (mainWindow) {
-      mainWindow.webContents.send("server-log", "Server stopped manually.");
+      mainWindow.webContents.send("server-log", "SYSTEM: ปิดการทำงานเรียบร้อย...");
     }
   }
 });
