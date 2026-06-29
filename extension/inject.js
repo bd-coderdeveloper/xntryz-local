@@ -1,0 +1,3 @@
+window.upfeed = {
+    installed: true
+};

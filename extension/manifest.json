@@ -1,0 +1,57 @@
+{
+    "name": "UPFEEDTH",
+    "version": "1.6",
+    "manifest_version": 3,
+    "description": "UPFEEDTH FOR YOUR LIFE.",
+    "background": {
+        "service_worker": "bg.js"
+    },
+    "action": {},
+    "content_scripts": [
+        {
+            "matches": [
+                "http://localhost:3000/*",
+                "https://localhost:3000/*",
+                "https://*.vercel.app/*",
+                "https://*.upfeedth.com/*",
+                "https://upfeedth.com/*"
+            ],
+            "js": [
+                "inject.js"
+            ],
+            "run_at": "document_start",
+            "world": "MAIN",
+            "all_frames": true
+        },
+        {
+            "matches": [
+                "http://localhost:3000/*",
+                "https://localhost:3000/*",
+                "https://*.vercel.app/*",
+                "https://*.upfeedth.com/*",
+                "https://upfeedth.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "all_frames": true
+        }
+    ],
+    "icons": {
+        "16": "upfeed_logo.png",
+        "48": "upfeed_logo.png",
+        "128": "upfeed_logo.png"
+    },
+    "permissions": [
+        "declarativeNetRequest",
+        "declarativeNetRequestFeedback",
+        "declarativeNetRequestWithHostAccess",
+        "cookies",
+        "tabs",
+        "storage",
+        "scripting"
+    ],
+    "host_permissions": [
+        "*://*/*"
+    ]
+}
