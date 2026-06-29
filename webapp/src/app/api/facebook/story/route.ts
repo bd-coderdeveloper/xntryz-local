@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+  (process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://dummy.supabase.co'),
+  (process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy')
+);
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return NextResponse.json({ success: false, error: 'No authorization header' }, { status: 401 });
+    }
 
-    if (!user) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
