@@ -1,5 +1,5 @@
-.vercel
-node_modules
-.next
-dist
-out
+﻿node_modules/
+.next/
+dist/
+.env.local
+webapp/.env.local

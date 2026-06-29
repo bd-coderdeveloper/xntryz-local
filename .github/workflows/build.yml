@@ -26,10 +26,15 @@ jobs:
         working-directory: ./webapp
         run: npm install
 
+      - name: Inject Secrets into .env.local
+        working-directory: ./webapp
+        run: |
+          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.local
+
       - name: Build Next.js
         working-directory: ./webapp
         env:
-          SUPABASE_SERVICE_ROLE_KEY: dummy_key_to_pass_build
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run build:standalone
 
       - name: Remove .gitignore
