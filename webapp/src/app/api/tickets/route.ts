@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://dummy.supabase.co');
+const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy');
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { autoRefreshToken: false, persistSession: false },

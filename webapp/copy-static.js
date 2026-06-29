@@ -33,4 +33,16 @@ if (fs.existsSync(staticDir)) {
   console.log('Copied .next/static directory.');
 }
 
+const envLocalPath = path.join(__dirname, '.env.local');
+if (fs.existsSync(envLocalPath)) {
+  fs.copyFileSync(envLocalPath, path.join(standaloneDir, '.env.local'));
+  console.log('Copied .env.local.');
+}
+
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  fs.copyFileSync(envPath, path.join(standaloneDir, '.env'));
+  console.log('Copied .env.');
+}
+
 console.log('Static assets copied successfully.');
