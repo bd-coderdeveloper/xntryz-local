@@ -148,6 +148,8 @@ export default function PageStoryPage() {
           { type: 'text', name: '__user', value: effectivePageId },
           { type: 'text', name: '__a', value: "1" },
           { type: 'text', name: 'fb_dtsg', value: fb_dtsg },
+          { type: 'text', name: 'fb_api_caller_class', value: "RelayModern" },
+          { type: 'text', name: 'fb_api_req_friendly_name', value: "StoriesCreateMutation" },
           { type: 'text', name: 'server_timestamps', value: "true" },
           { type: 'text', name: 'doc_id', value: '26770527039211553' },
           { type: 'text', name: 'variables', value: variables }
