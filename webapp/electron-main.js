@@ -17,6 +17,7 @@ function createWindow() {
       contextIsolation: false,
     },
     title: "UPFEEDTH Launcher",
+    icon: path.join(__dirname, "upfeed_logo.ico"),
     autoHideMenuBar: true,
   });
 
